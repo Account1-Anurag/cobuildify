@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// schema.prisma
+// Prisma docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -14,10 +11,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//
+// ---------- AUTH MODELS ----------
+//
+
 model User {
   id            String    @id
   name          String
-  email         String
+  email         String    @unique
   emailVerified Boolean
   image         String?
   createdAt     DateTime
@@ -25,14 +26,26 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  @@unique([email])
+  // Extended fields for project system
+  location      String?
+  rating        Float?
+
+  // Relations with projects
+  contributedProjects    Project[]          @relation("ProjectContributor")
+  activeAsContributor    Active_Project[]   @relation("ContributorActiveProjects")
+  activeAsDeveloper      Active_Project[]   @relation("DeveloperActiveProjects")
+  completedAsContributor Completed_Project[] @relation("ContributorCompletedProjects")
+  completedAsDeveloper   Completed_Project[] @relation("DeveloperCompletedProjects")
+  listed_projects        Listed_Project[]
+  skills                 User_Skill[]
+
   @@map("user")
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime
   updatedAt DateTime
   ipAddress String?
@@ -40,7 +53,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -72,4 +84,95 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+//
+// ---------- PROJECT MODELS ----------
+//
+
+model Project {
+  p_id           Int     @id @default(autoincrement())
+  title          String
+  description    String?
+  max_team_size  Int
+  paid           Boolean
+  contributor_id String
+
+  contributor User @relation("ProjectContributor", fields: [contributor_id], references: [id])
+
+  listed_by  Listed_Project[]
+  active     Active_Project[]
+  completed  Completed_Project[]
+  skills     Project_Skill[]
+}
+
+model Listed_Project {
+  contributor_id String
+  project_id     Int
+
+  contributor User    @relation(fields: [contributor_id], references: [id])
+  project     Project @relation(fields: [project_id], references: [p_id])
+
+  @@id([contributor_id, project_id])
+}
+
+model Active_Project {
+  active_id      Int    @id @default(autoincrement())
+  project_id     Int
+  contributor_id String
+  developer_id   String
+
+  project     Project @relation(fields: [project_id], references: [p_id])
+
+  contributor User @relation("ContributorActiveProjects", fields: [contributor_id], references: [id])
+  developer   User @relation("DeveloperActiveProjects",   fields: [developer_id],   references: [id])
+
+  @@index([project_id])
+  @@index([contributor_id])
+  @@index([developer_id])
+}
+
+model Completed_Project {
+  comp_id        Int   @id @default(autoincrement())
+  proj_id        Int
+  developer_id   String
+  contributor_id String
+  rating         Float?
+
+  project     Project @relation(fields: [proj_id], references: [p_id])
+
+  contributor User @relation("ContributorCompletedProjects", fields: [contributor_id], references: [id])
+  developer   User @relation("DeveloperCompletedProjects",   fields: [developer_id],   references: [id])
+
+  @@index([proj_id])
+  @@index([contributor_id])
+  @@index([developer_id])
+}
+
+model Skill {
+  skill_id Int    @id @default(autoincrement())
+  name     String
+
+  users    User_Skill[]
+  projects Project_Skill[]
+}
+
+model Project_Skill {
+  project_id Int
+  skill_id   Int
+
+  project Project @relation(fields: [project_id], references: [p_id])
+  skill   Skill   @relation(fields: [skill_id], references: [skill_id])
+
+  @@id([project_id, skill_id])
+}
+
+model User_Skill {
+  user_id  String
+  skill_id Int
+
+  user  User  @relation(fields: [user_id], references: [id])
+  skill Skill @relation(fields: [skill_id], references: [skill_id])
+
+  @@id([user_id, skill_id])
 }

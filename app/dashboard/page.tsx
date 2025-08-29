@@ -437,7 +437,7 @@ export default function Dashboard() {
                       <div key={skill} className={`flex items-center space-x-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm transition-colors ${
                         isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {skillIcons[skill] || <Code className="w-4 h-4" />}
+                        {skillIcons[skill ] || <Code className="w-4 h-4" />}
                         <span>{skill}</span>
                       </div>
                     ))}
