@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { div } from "motion/react-client";
 import { IconBrandGithub } from "@tabler/icons-react";
 import z from "zod";
-import { loginWithEmail } from "@/lib/auth-client";
+import { loginWithEmail, signInWithGitHub, signInWithGoogle } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 const loginSchema = z.object({
   email: z.email(),
@@ -45,11 +46,11 @@ export function LoginForm({
       setErrors(fieldErrors);
       return;
     }
-    
-    await loginWithEmail(form.email, form.password);
-    // ...submit logic here
+
+    await loginWithEmail(form.email.trim(), form.password.trim());
+
     setErrors({});
-    alert("Login successful!");
+    toast.success("Login successful!");
   }
 
   return (
@@ -128,6 +129,7 @@ export function LoginForm({
               variant="outline"
               type="button"
               className="w-full group bg-zinc-900 text-white hover:cursor-pointer hover: transition-all "
+              onClick={signInWithGitHub}
             >
               <IconBrandGithub className="h-4 w-4 text-white group-hover:text-black" />
               Continue with Github
@@ -136,6 +138,7 @@ export function LoginForm({
               variant="outline"
               type="button"
               className="w-full bg-zinc-900 hover:cursor-pointer hover:bg-white/80  "
+              onClick={signInWithGoogle}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path

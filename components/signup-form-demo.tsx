@@ -9,13 +9,14 @@ import {
   IconBrandOnlyfans,
 } from "@tabler/icons-react";
 import z from "zod";
-import { signUpWithEmail } from "@/lib/auth-client";
+import toast from "react-hot-toast";
+import { authClient, signInWithGitHub, signInWithGoogle, signUpWithEmail } from "@/lib/auth-client";
 
 const signupSchema = z
   .object({
     firstname: z.string().min(2, "First name is too short"),
     lastname: z.string().min(2, "Last name is too short"),
-    email: z.string().email("Invalid email address"),
+    email: z.email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z
       .string()
@@ -47,7 +48,7 @@ export default function SignupFormDemo() {
     setErrors({ ...errors, [e.target.id]: undefined });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const result = signupSchema.safeParse(form);
     if (!result.success) {
@@ -73,10 +74,14 @@ export default function SignupFormDemo() {
       setErrors(fieldErrors);
       return;
     }
-    const name=form.firstname+" "+form.lastname;
-    signUpWithEmail(name, form.email, form.password);
+    const name=form.firstname.trim()+" "+form.lastname.trim();
+    await signUpWithEmail(name, form.email, form.password);
+    await authClient.sendVerificationEmail({
+      email: form.email.trim(),
+      callbackURL: process.env.DASHBOARD_URL,
+    });
     setErrors({});
-    alert("Signup successful!");
+    toast.success("Verification email sent! Please check your inbox.");
   };
 
   return (
@@ -179,7 +184,8 @@ export default function SignupFormDemo() {
           <div className="flex flex-col space-y-4">
             <button
               className=" hover:cursor-pointer group/btn shadow-input relative flex h-10 w-full items-center justify-start space-x-2 rounded-md bg-gray-50 px-4 font-medium text-black dark:bg-zinc-900 "
-              type="submit"
+              type="button"
+              onClick={signInWithGitHub}
             >
               <IconBrandGithub className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
               <span className="text-sm text-neutral-700 dark:text-neutral-300">
@@ -189,7 +195,8 @@ export default function SignupFormDemo() {
             </button>
             <button
               className="hover:cursor-pointer group/btn shadow-input relative flex h-10 w-full items-center justify-start space-x-2 rounded-md bg-gray-50 px-4 font-medium text-black dark:bg-zinc-900 "
-              type="submit"
+              type="button"
+              onClick={signInWithGoogle}
             >
               <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
               <span className="text-sm text-neutral-700 dark:text-neutral-300">

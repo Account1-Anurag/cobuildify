@@ -1,11 +1,12 @@
 
 
 import { createAuthClient } from "better-auth/client";
-const authClient = createAuthClient();
+export const authClient = createAuthClient();
 
- export const signIn = async () => {
+ export const signInWithGoogle = async () => {
   const data = await authClient.signIn.social({
     provider: "google",
+    callbackURL: process.env.DASHBOARD_URL,
   });
 };
 
@@ -13,6 +14,8 @@ const authClient = createAuthClient();
  export const signInWithGitHub = async () => {
   const data = await authClient.signIn.social({
     provider: "github",
+    callbackURL: process.env.DASHBOARD_URL,
+
   });
 };
 
